@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GTOver1</title>
+<link rel="stylesheet" href="view.css">
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <div>
+      <h1>GTOver1</h1>
+      <div class="note">Poker GTO image search</div>
+    </div>
+    <div><a href="admin.html">DEVELOPER</a></div>
+  </div>
+</header>
+
+<main>
+  <section class="panel">
+    <div class="grid-4">
+      <div><label>PLAYERS</label><select id="players"></select></div>
+      <div><label>STACK</label><select id="stack"></select></div>
+      <div><label>POSITION</label><select id="position"></select></div>
+      <div><label>ACTION</label><select id="action"></select></div>
+    </div>
+    <button class="secondary" id="resetBtn">RESET</button>
+  </section>
+
+  <section class="panel status">
+    <div id="status">LOADING...</div>
+    <div id="conditionText" class="condition-text"></div>
+  </section>
+
+  <section id="result"></section>
+</main>
+
+<div id="modal" class="modal">
+  <button id="closeModal" class="modal-close">閉じる</button>
+  <img id="modalImage" alt="">
+</div>
+
+<script type="module">
+import {
+  listenOptions,
+  listenImages,
+  setupSelect,
+  makeTitle
+} from "./app.js";
+
+let options = null;
+let images = [];
+const ids = ["players", "stack", "position", "action"];
+const storageKey = "gtover1-last-conditions-v2";
+
+function value(id) {
+  return document.getElementById(id).value;
+}
+
+function currentConditions() {
+  return {
+    players: value("players"),
+    stack: value("stack"),
+    position: value("position"),
+    action: value("action")
+  };
+}
+
+function conditionText() {
+  const c = currentConditions();
+  return [c.players, c.stack, c.position, c.action].filter(Boolean).join(" / ");
+}
+
+function isComplete() {
+  return ids.every(id => value(id));
+}
+
+function saveLastConditions() {
+  localStorage.setItem(storageKey, JSON.stringify(currentConditions()));
+}
+
+function restoreLastConditions() {
+  try {
+    const raw = localStorage.getItem(storageKey);
+    if (!raw) return;
+    const last = JSON.parse(raw);
+    ids.forEach(id => {
+      if (last[id]) document.getElementById(id).value = last[id];
+    });
+  } catch (e) {}
+}
+
+function renderSelects() {
+  if (!options) return;
+  setupSelect(document.getElementById("players"), options.players);
+  setupSelect(document.getElementById("stack"), options.stack);
+  setupSelect(document.getElementById("position"), options.position);
+  setupSelect(document.getElementById("action"), options.action);
+  restoreLastConditions();
+}
+
+function search() {
+  const result = document.getElementById("result");
+  const status = document.getElementById("status");
+  const condition = document.getElementById("conditionText");
+
+  condition.textContent = conditionText() || "条件未選択";
+
+  if (!options) {
+    status.textContent = "LOADING...";
+    return;
+  }
+
+  saveLastConditions();
+
+  if (!isComplete()) {
+    status.textContent = "条件を選択してください";
+    result.innerHTML = '<section class="panel empty">4つの条件をすべて選択すると、自動で画像を表示します。</section>';
+    return;
+  }
+
+  const found = images.find(item =>
+    item.players === value("players") &&
+    item.stack === value("stack") &&
+    item.position === value("position") &&
+    item.action === value("action")
+  );
+
+  if (!found) {
+    status.textContent = "未登録";
+    result.innerHTML = `
+      <section class="panel empty">
+        <strong>この条件の画像は未登録です。</strong><br><br>
+        ${conditionText()}
+      </section>
+    `;
+    return;
+  }
+
+  status.textContent = "表示中";
+  result.innerHTML = `
+    <article class="result-card">
+      <img id="resultImage" src="${found.image}" alt="${makeTitle(found)}">
+      <div class="result-info">
+        <h2>${makeTitle(found)}</h2>
+        <div class="tags">画像をタップすると拡大表示します</div>
+      </div>
+    </article>
+  `;
+
+  document.getElementById("resultImage").addEventListener("click", () => {
+    document.getElementById("modalImage").src = found.image;
+    document.getElementById("modal").classList.add("open");
+  });
+}
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  ids.forEach(id => document.getElementById(id).value = "");
+  localStorage.removeItem(storageKey);
+  search();
+});
+
+ids.forEach(id => {
+  document.getElementById(id).addEventListener("change", search);
+});
+
+document.getElementById("closeModal").addEventListener("click", () => {
+  document.getElementById("modal").classList.remove("open");
+});
+
+document.getElementById("modal").addEventListener("click", event => {
+  if (event.target.id === "modal") {
+    document.getElementById("modal").classList.remove("open");
+  }
+});
+
+listenOptions(newOptions => {
+  options = newOptions;
+  renderSelects();
+  search();
+});
+
+listenImages(newImages => {
+  images = newImages;
+  search();
+});
+</script>
+</body>
+</html>
