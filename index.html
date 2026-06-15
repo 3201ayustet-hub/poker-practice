@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Poker Practice GTO</title>
+<script src="data.js"></script>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+  background:radial-gradient(circle at top,#1f2937 0,#030712 45%,#000 100%);
+  color:#f9fafb;
+  min-height:100vh;
+}
+header{
+  padding:24px 18px;
+  border-bottom:1px solid #1f2937;
+  background:rgba(0,0,0,.55);
+  backdrop-filter:blur(10px);
+}
+.header-inner{
+  max-width:1050px;
+  margin:0 auto;
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:center;
+}
+h1{margin:0;font-size:24px;letter-spacing:.08em}
+.sub{color:#9ca3af;font-size:13px;margin-top:4px}
+a{color:#fbbf24;text-decoration:none}
+main{max-width:1050px;margin:0 auto;padding:18px}
+.panel{
+  background:linear-gradient(180deg,rgba(17,24,39,.96),rgba(3,7,18,.96));
+  border:1px solid #374151;
+  border-radius:18px;
+  padding:18px;
+  margin-bottom:18px;
+  box-shadow:0 16px 40px rgba(0,0,0,.35);
+}
+.filters{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+}
+label{
+  display:block;
+  color:#d1d5db;
+  font-size:12px;
+  font-weight:800;
+  margin-bottom:6px;
+  letter-spacing:.06em;
+}
+select,button{
+  width:100%;
+  padding:13px;
+  border-radius:12px;
+  font-size:16px;
+}
+select{
+  background:#020617;
+  color:#f9fafb;
+  border:1px solid #4b5563;
+}
+button{
+  border:0;
+  color:#111827;
+  background:linear-gradient(90deg,#fbbf24,#f97316);
+  font-weight:900;
+  margin-top:12px;
+}
+button.secondary{
+  background:#1f2937;
+  color:#e5e7eb;
+  border:1px solid #4b5563;
+}
+.count{color:#fbbf24;font-weight:800}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:18px;
+}
+.card{
+  overflow:hidden;
+  border-radius:18px;
+  border:1px solid #374151;
+  background:#030712;
+  box-shadow:0 14px 34px rgba(0,0,0,.45);
+}
+.card img{
+  width:100%;
+  display:block;
+  background:#111827;
+}
+.info{padding:14px}
+.info h3{margin:0 0 8px;font-size:17px}
+.tags{color:#9ca3af;font-size:13px}
+.empty{
+  text-align:center;
+  color:#9ca3af;
+  padding:36px 12px;
+}
+@media(max-width:720px){.filters{grid-template-columns:1fr 1fr}.header-inner{display:block}}
+@media(max-width:430px){.filters{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <div>
+      <h1>POKER PRACTICE GTO</h1>
+      <div class="sub">Select conditions and view matching strategy images.</div>
+    </div>
+    <div><a href="admin.html">Developer</a></div>
+  </div>
+</header>
+
+<main>
+  <section class="panel">
+    <div class="filters">
+      <div><label>PLAYERS</label><select id="players"></select></div>
+      <div><label>STACK</label><select id="stack"></select></div>
+      <div><label>POSITION</label><select id="position"></select></div>
+      <div><label>ACTION</label><select id="action"></select></div>
+    </div>
+    <button onclick="searchImages()">SEARCH</button>
+    <button class="secondary" onclick="resetSearch()">RESET</button>
+  </section>
+
+  <section class="panel">
+    <div id="count" class="count"></div>
+  </section>
+
+  <section id="results" class="grid"></section>
+</main>
+
+<script>
+function setupSelect(id, values){
+  const select=document.getElementById(id);
+  select.innerHTML='<option value="">ALL</option>';
+  values.forEach(v=>{
+    const op=document.createElement("option");
+    op.value=v;
+    op.textContent=v;
+    select.appendChild(op);
+  });
+}
+
+function setup(){
+  setupSelect("players",OPTIONS.players);
+  setupSelect("stack",OPTIONS.stack);
+  setupSelect("position",OPTIONS.position);
+  setupSelect("action",OPTIONS.action);
+  searchImages();
+}
+
+function val(id){return document.getElementById(id).value}
+
+function searchImages(){
+  const results=IMAGE_DATA.filter(item=>
+    (!val("players") || item.players===val("players")) &&
+    (!val("stack") || item.stack===val("stack")) &&
+    (!val("position") || item.position===val("position")) &&
+    (!val("action") || item.action===val("action"))
+  );
+  render(results);
+}
+
+function resetSearch(){
+  ["players","stack","position","action"].forEach(id=>document.getElementById(id).value="");
+  searchImages();
+}
+
+function render(items){
+  document.getElementById("count").textContent=`RESULTS: ${items.length}`;
+  const area=document.getElementById("results");
+  if(items.length===0){
+    area.innerHTML='<div class="panel empty">No matching image.</div>';
+    return;
+  }
+  area.innerHTML=items.map(item=>`
+    <article class="card">
+      <img src="${item.image}" alt="${item.title}">
+      <div class="info">
+        <h3>${item.title}</h3>
+        <div class="tags">${item.players} / ${item.stack} / ${item.position} / ${item.action}</div>
+      </div>
+    </article>
+  `).join("");
+}
+setup();
+</script>
+</body>
+</html>
