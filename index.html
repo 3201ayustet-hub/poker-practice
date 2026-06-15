@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GTOver1</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <div>
+      <h1>GTOver1</h1>
+      <div class="note">Poker GTO image search</div>
+    </div>
+    <div><a href="admin.html">DEVELOPER</a></div>
+  </div>
+</header>
+
+<main>
+  <section class="panel">
+    <div class="grid-4">
+      <div><label>PLAYERS</label><select id="players"></select></div>
+      <div><label>STACK</label><select id="stack"></select></div>
+      <div><label>POSITION</label><select id="position"></select></div>
+      <div><label>ACTION</label><select id="action"></select></div>
+    </div>
+    <button id="searchBtn">SEARCH</button>
+    <button class="secondary" id="resetBtn">RESET</button>
+  </section>
+
+  <section class="panel">
+    <div id="status" class="status">LOADING...</div>
+  </section>
+
+  <section id="result"></section>
+</main>
+
+<script type="module">
+import {
+  listenOptions,
+  listenImages,
+  setupSelect,
+  makeTitle
+} from "./app.js";
+
+let options = null;
+let images = [];
+
+const ids = ["players", "stack", "position", "action"];
+
+function value(id) {
+  return document.getElementById(id).value;
+}
+
+function isComplete() {
+  return ids.every(id => value(id));
+}
+
+function renderSelects() {
+  if (!options) return;
+  setupSelect(document.getElementById("players"), options.players);
+  setupSelect(document.getElementById("stack"), options.stack);
+  setupSelect(document.getElementById("position"), options.position);
+  setupSelect(document.getElementById("action"), options.action);
+}
+
+function search() {
+  const result = document.getElementById("result");
+  const status = document.getElementById("status");
+
+  if (!options) {
+    status.textContent = "LOADING...";
+    return;
+  }
+
+  if (!isComplete()) {
+    status.textContent = "SELECT CONDITIONS";
+    result.innerHTML = '<section class="panel empty">4つの条件をすべて選択してください。</section>';
+    return;
+  }
+
+  const found = images.find(item =>
+    item.players === value("players") &&
+    item.stack === value("stack") &&
+    item.position === value("position") &&
+    item.action === value("action")
+  );
+
+  if (!found) {
+    status.textContent = "NO IMAGE";
+    result.innerHTML = '<section class="panel empty">この条件の画像はまだ登録されていません。</section>';
+    return;
+  }
+
+  status.textContent = "FOUND";
+  result.innerHTML = `
+    <article class="result-card">
+      <img src="${found.image}" alt="${makeTitle(found)}">
+      <div class="result-info">
+        <h2>${makeTitle(found)}</h2>
+        <div class="tags">${found.players} / ${found.stack} / ${found.position} / ${found.action}</div>
+      </div>
+    </article>
+  `;
+}
+
+document.getElementById("searchBtn").addEventListener("click", search);
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  ids.forEach(id => document.getElementById(id).value = "");
+  search();
+});
+
+ids.forEach(id => {
+  document.getElementById(id).addEventListener("change", search);
+});
+
+listenOptions(newOptions => {
+  options = newOptions;
+  renderSelects();
+  search();
+});
+
+listenImages(newImages => {
+  images = newImages;
+  search();
+});
+</script>
+</body>
+</html>
