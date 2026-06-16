@@ -1,0 +1,271 @@
+/* view.css */
+/* v3 閲覧ページ：白基調・2レンジ比較 */
+
+* { box-sizing: border-box; }
+
+:root {
+  --panel: #ffffff;
+  --text: #111827;
+  --muted: #6b7280;
+  --line: #e5e7eb;
+  --blue: #2563eb;
+  --blue2: #1d4ed8;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: linear-gradient(180deg, #ffffff 0%, #f5f7fb 52%, #eef2ff 100%);
+  color: var(--text);
+}
+
+header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(255,255,255,.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+
+.header-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 14px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: .08em;
+}
+
+.note {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+a {
+  color: var(--blue);
+  text-decoration: none;
+  font-weight: 900;
+}
+
+main {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 12px 10px 36px;
+}
+
+.compare-controls {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 10px 28px rgba(15,23,42,.08);
+}
+
+.range-box {
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid #dbeafe;
+  background: #f8fbff;
+  border-radius: 14px;
+}
+
+.range-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  color: var(--blue2);
+  font-size: 13px;
+}
+
+.range-head span {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.compact-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+select,
+button {
+  width: 100%;
+  padding: 10px 9px;
+  border-radius: 12px;
+  font-size: 14px;
+}
+
+select {
+  color: #111827;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+}
+
+button {
+  border: 0;
+  color: white;
+  background: linear-gradient(90deg, var(--blue), var(--blue2));
+  font-weight: 900;
+  cursor: pointer;
+}
+
+button.secondary {
+  color: var(--blue2);
+  background: #eef2ff;
+  border: 1px solid #bfdbfe;
+}
+
+.button-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.results-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.range-result {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 16px 42px rgba(15,23,42,.12);
+}
+
+.result-title {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  background: #ffffff;
+}
+
+.result-label {
+  display: inline-block;
+  min-width: 34px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--blue);
+  color: white;
+  font-weight: 900;
+  font-size: 13px;
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+.result-title h2,
+.empty-card h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.range-image {
+  width: 100%;
+  display: block;
+  background: #f3f4f6;
+  cursor: zoom-in;
+}
+
+.empty-card {
+  padding: 28px 14px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.empty-card h2 {
+  color: #111827;
+  margin: 8px 0;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.9);
+  z-index: 999;
+  padding: 14px;
+}
+
+.modal.open {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal img {
+  max-width: 100%;
+  max-height: 90vh;
+  border-radius: 12px;
+  background: white;
+}
+
+.modal-close {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  width: auto;
+  padding: 10px 14px;
+  margin: 0;
+  background: white;
+  color: #111827;
+  border-radius: 999px;
+}
+
+@media (min-width: 900px) {
+  .compare-controls {
+    position: sticky;
+    top: 73px;
+    z-index: 5;
+  }
+}
+
+@media (max-width: 760px) {
+  .header-inner {
+    display: block;
+  }
+
+  .compact-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 430px) {
+  main {
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+
+  .compact-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+
+  select,
+  button {
+    font-size: 13px;
+    padding: 9px 7px;
+  }
+
+  .compare-controls {
+    padding: 8px;
+  }
+
+  .range-box {
+    padding: 8px;
+  }
+}

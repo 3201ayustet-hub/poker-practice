@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GTOver1 Compare</title>
+<link rel="stylesheet" href="view.css">
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <div>
+      <h1>GTOver1</h1>
+      <div class="note">Compare two GTO ranges</div>
+    </div>
+    <div><a href="admin.html">DEVELOPER</a></div>
+  </div>
+</header>
+
+<main>
+  <section class="compare-controls">
+    <div class="range-box">
+      <div class="range-head">
+        <strong>RANGE A</strong>
+        <span id="statusA">選択してください</span>
+      </div>
+      <div class="compact-grid">
+        <select id="a-players"></select>
+        <select id="a-stack"></select>
+        <select id="a-position"></select>
+        <select id="a-action"></select>
+      </div>
+    </div>
+
+    <div class="range-box">
+      <div class="range-head">
+        <strong>RANGE B</strong>
+        <span id="statusB">選択してください</span>
+      </div>
+      <div class="compact-grid">
+        <select id="b-players"></select>
+        <select id="b-stack"></select>
+        <select id="b-position"></select>
+        <select id="b-action"></select>
+      </div>
+    </div>
+
+    <div class="button-row">
+      <button id="swapBtn">A / B 入れ替え</button>
+      <button class="secondary" id="resetBtn">RESET</button>
+    </div>
+  </section>
+
+  <section id="results" class="results-stack"></section>
+</main>
+
+<div id="modal" class="modal">
+  <button id="closeModal" class="modal-close">閉じる</button>
+  <img id="modalImage" alt="">
+</div>
+
+<script type="module">
+import {
+  listenOptions,
+  listenImages,
+  setupSelect,
+  makeTitle
+} from "./app.js";
+
+let options = null;
+let images = [];
+const fields = ["players", "stack", "position", "action"];
+const storageKey = "gtover1-compare-v3";
+
+function id(prefix, field) {
+  return `${prefix}-${field}`;
+}
+
+function value(prefix, field) {
+  return document.getElementById(id(prefix, field)).value;
+}
+
+function getConditions(prefix) {
+  return {
+    players: value(prefix, "players"),
+    stack: value(prefix, "stack"),
+    position: value(prefix, "position"),
+    action: value(prefix, "action")
+  };
+}
+
+function setConditions(prefix, item = {}) {
+  fields.forEach(field => {
+    document.getElementById(id(prefix, field)).value = item[field] || "";
+  });
+}
+
+function isComplete(item) {
+  return fields.every(field => item[field]);
+}
+
+function titleOrEmpty(item) {
+  return fields.map(field => item[field]).filter(Boolean).join(" / ") || "条件未選択";
+}
+
+function findImage(item) {
+  return images.find(x =>
+    x.players === item.players &&
+    x.stack === item.stack &&
+    x.position === item.position &&
+    x.action === item.action
+  );
+}
+
+function saveLast() {
+  localStorage.setItem(storageKey, JSON.stringify({
+    a: getConditions("a"),
+    b: getConditions("b")
+  }));
+}
+
+function restoreLast() {
+  try {
+    const raw = localStorage.getItem(storageKey);
+    if (!raw) return;
+    const last = JSON.parse(raw);
+    setConditions("a", last.a);
+    setConditions("b", last.b);
+  } catch (e) {}
+}
+
+function renderSelects() {
+  if (!options) return;
+
+  ["a", "b"].forEach(prefix => {
+    setupSelect(document.getElementById(id(prefix, "players")), options.players, "人数");
+    setupSelect(document.getElementById(id(prefix, "stack")), options.stack, "スタック");
+    setupSelect(document.getElementById(id(prefix, "position")), options.position, "ポジション");
+    setupSelect(document.getElementById(id(prefix, "action")), options.action, "アクション");
+  });
+
+  restoreLast();
+}
+
+function renderOne(label, prefix) {
+  const conditions = getConditions(prefix);
+  const status = document.getElementById(`status${label}`);
+  const conditionTitle = titleOrEmpty(conditions);
+
+  if (!isComplete(conditions)) {
+    status.textContent = "未選択";
+    return `
+      <article class="range-result empty-card">
+        <div class="result-label">${label}</div>
+        <h2>${conditionTitle}</h2>
+        <p>4つの条件を選択してください。</p>
+      </article>
+    `;
+  }
+
+  const found = findImage(conditions);
+
+  if (!found) {
+    status.textContent = "未登録";
+    return `
+      <article class="range-result empty-card">
+        <div class="result-label">${label}</div>
+        <h2>${conditionTitle}</h2>
+        <p>この条件の画像は未登録です。</p>
+      </article>
+    `;
+  }
+
+  status.textContent = "表示中";
+  return `
+    <article class="range-result">
+      <div class="result-title">
+        <div class="result-label">${label}</div>
+        <h2>${makeTitle(found)}</h2>
+      </div>
+      <img class="range-image" src="${found.image}" alt="${makeTitle(found)}">
+    </article>
+  `;
+}
+
+function render() {
+  if (!options) return;
+  saveLast();
+  document.getElementById("results").innerHTML = renderOne("A", "a") + renderOne("B", "b");
+
+  document.querySelectorAll(".range-image").forEach(img => {
+    img.addEventListener("click", () => {
+      document.getElementById("modalImage").src = img.src;
+      document.getElementById("modal").classList.add("open");
+    });
+  });
+}
+
+document.querySelectorAll("select").forEach(select => {
+  select.addEventListener("change", render);
+});
+
+document.getElementById("swapBtn").addEventListener("click", () => {
+  const a = getConditions("a");
+  const b = getConditions("b");
+  setConditions("a", b);
+  setConditions("b", a);
+  render();
+});
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  setConditions("a", {});
+  setConditions("b", {});
+  localStorage.removeItem(storageKey);
+  render();
+});
+
+document.getElementById("closeModal").addEventListener("click", () => {
+  document.getElementById("modal").classList.remove("open");
+});
+
+document.getElementById("modal").addEventListener("click", event => {
+  if (event.target.id === "modal") {
+    document.getElementById("modal").classList.remove("open");
+  }
+});
+
+listenOptions(newOptions => {
+  options = newOptions;
+  renderSelects();
+  render();
+});
+
+listenImages(newImages => {
+  images = newImages;
+  render();
+});
+</script>
+</body>
+</html>
