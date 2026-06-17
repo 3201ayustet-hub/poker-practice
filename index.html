@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GTOver1</title>
+<link rel="stylesheet" href="view.css">
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <div>
+      <h1>GTOver1</h1>
+      <div class="note">Side-by-side range comparison</div>
+    </div>
+    <a href="admin.html">DEV</a>
+  </div>
+</header>
+
+<main>
+  <section class="toolbar">
+    <div class="mode-row">
+      <button id="singleBtn" class="mini secondary">Single</button>
+      <button id="compareBtn" class="mini active">Compare</button>
+      <button id="swapBtn" class="mini">Swap</button>
+      <button id="resetBtn" class="mini secondary">Reset</button>
+    </div>
+
+    <div class="select-row">
+      <span class="range-badge">A</span>
+      <select id="a-players"></select>
+      <select id="a-stack"></select>
+      <select id="a-position"></select>
+      <select id="a-action"></select>
+      <span id="statusA" class="status">未選択</span>
+    </div>
+
+    <div class="select-row" id="rowB">
+      <span class="range-badge">B</span>
+      <select id="b-players"></select>
+      <select id="b-stack"></select>
+      <select id="b-position"></select>
+      <select id="b-action"></select>
+      <span id="statusB" class="status">未選択</span>
+    </div>
+
+    <div id="diffBox" class="diff"></div>
+  </section>
+
+  <section id="results" class="results compare"></section>
+</main>
+
+<div id="modal" class="modal">
+  <button id="closeModal" class="modal-close">閉じる</button>
+  <img id="modalImage" alt="">
+</div>
+
+<script type="module">
+import {
+  listenOptions,
+  listenImages,
+  setupSelect,
+  makeTitle
+} from "./app.js";
+
+let options = null;
+let images = [];
+let mode = "compare";
+
+const fields = ["players", "stack", "position", "action"];
+const storageKey = "gtover1-v5-last";
+
+function id(prefix, field) {
+  return `${prefix}-${field}`;
+}
+
+function value(prefix, field) {
+  return document.getElementById(id(prefix, field)).value;
+}
+
+function getConditions(prefix) {
+  return {
+    players: value(prefix, "players"),
+    stack: value(prefix, "stack"),
+    position: value(prefix, "position"),
+    action: value(prefix, "action")
+  };
+}
+
+function setConditions(prefix, item = {}) {
+  fields.forEach(field => {
+    document.getElementById(id(prefix, field)).value = item[field] || "";
+  });
+}
+
+function isComplete(item) {
+  return fields.every(field => item[field]);
+}
+
+function findImage(item) {
+  return images.find(x =>
+    x.players === item.players &&
+    x.stack === item.stack &&
+    x.position === item.position &&
+    x.action === item.action
+  );
+}
+
+function titleText(item) {
+  return fields.map(field => item[field]).filter(Boolean).join(" / ") || "条件未選択";
+}
+
+function saveLast() {
+  localStorage.setItem(storageKey, JSON.stringify({
+    mode,
+    a: getConditions("a"),
+    b: getConditions("b")
+  }));
+}
+
+function restoreLast() {
+  try {
+    const raw = localStorage.getItem(storageKey);
+    if (!raw) return;
+    const last = JSON.parse(raw);
+    if (last.mode) mode = last.mode;
+    setConditions("a", last.a);
+    setConditions("b", last.b);
+  } catch (e) {}
+}
+
+function setupAllSelects() {
+  if (!options) return;
+  ["a", "b"].forEach(prefix => {
+    setupSelect(document.getElementById(id(prefix, "players")), options.players, "人数");
+    setupSelect(document.getElementById(id(prefix, "stack")), options.stack, "BB");
+    setupSelect(document.getElementById(id(prefix, "position")), options.position, "Pos");
+    setupSelect(document.getElementById(id(prefix, "action")), options.action, "Act");
+  });
+  restoreLast();
+}
+
+function renderDiff() {
+  const box = document.getElementById("diffBox");
+  if (mode !== "compare") {
+    box.innerHTML = "";
+    return;
+  }
+
+  const a = getConditions("a");
+  const b = getConditions("b");
+  const labels = {
+    players: "人数",
+    stack: "スタック",
+    position: "ポジション",
+    action: "アクション"
+  };
+
+  const diffs = fields
+    .filter(field => a[field] && b[field] && a[field] !== b[field])
+    .map(field => `<span>${labels[field]} <b>${a[field]}</b> → <b>${b[field]}</b></span>`);
+
+  box.innerHTML = diffs.length ? diffs.join("") : "<span>差分なし</span>";
+}
+
+function renderCard(label, prefix) {
+  const conditions = getConditions(prefix);
+  const status = document.getElementById(`status${label}`);
+
+  if (!isComplete(conditions)) {
+    status.textContent = "未選択";
+    return `
+      <article class="card empty">
+        <div class="card-title"><span>${label}</span><strong>${titleText(conditions)}</strong></div>
+        <div class="empty-body">条件を選択してください</div>
+      </article>
+    `;
+  }
+
+  const found = findImage(conditions);
+  if (!found) {
+    status.textContent = "未登録";
+    return `
+      <article class="card empty">
+        <div class="card-title"><span>${label}</span><strong>${titleText(conditions)}</strong></div>
+        <div class="empty-body">未登録</div>
+      </article>
+    `;
+  }
+
+  status.textContent = "表示中";
+  return `
+    <article class="card">
+      <div class="card-title"><span>${label}</span><strong>${makeTitle(found)}</strong></div>
+      <img class="range-img" src="${found.image}" alt="${makeTitle(found)}">
+    </article>
+  `;
+}
+
+function renderMode() {
+  document.getElementById("singleBtn").classList.toggle("active", mode === "single");
+  document.getElementById("compareBtn").classList.toggle("active", mode === "compare");
+  document.getElementById("rowB").style.display = mode === "compare" ? "grid" : "none";
+  document.getElementById("swapBtn").style.visibility = mode === "compare" ? "visible" : "hidden";
+  document.getElementById("results").className = mode === "compare" ? "results compare" : "results single";
+}
+
+function render() {
+  if (!options) return;
+
+  saveLast();
+  renderMode();
+  renderDiff();
+
+  const area = document.getElementById("results");
+  if (mode === "single") {
+    document.getElementById("statusB").textContent = "";
+    area.innerHTML = renderCard("A", "a");
+  } else {
+    area.innerHTML = renderCard("A", "a") + renderCard("B", "b");
+  }
+
+  document.querySelectorAll(".range-img").forEach(img => {
+    img.addEventListener("click", () => {
+      document.getElementById("modalImage").src = img.src;
+      document.getElementById("modal").classList.add("open");
+    });
+  });
+}
+
+document.querySelectorAll("select").forEach(select => {
+  select.addEventListener("change", render);
+});
+
+document.getElementById("singleBtn").addEventListener("click", () => {
+  mode = "single";
+  render();
+});
+
+document.getElementById("compareBtn").addEventListener("click", () => {
+  mode = "compare";
+  render();
+});
+
+document.getElementById("swapBtn").addEventListener("click", () => {
+  const a = getConditions("a");
+  const b = getConditions("b");
+  setConditions("a", b);
+  setConditions("b", a);
+  render();
+});
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  setConditions("a", {});
+  setConditions("b", {});
+  localStorage.removeItem(storageKey);
+  render();
+});
+
+document.getElementById("closeModal").addEventListener("click", () => {
+  document.getElementById("modal").classList.remove("open");
+});
+
+document.getElementById("modal").addEventListener("click", event => {
+  if (event.target.id === "modal") {
+    document.getElementById("modal").classList.remove("open");
+  }
+});
+
+listenOptions(newOptions => {
+  options = newOptions;
+  setupAllSelects();
+  render();
+});
+
+listenImages(newImages => {
+  images = newImages;
+  render();
+});
+</script>
+</body>
+</html>

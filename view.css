@@ -1,0 +1,316 @@
+/* view.css */
+/* GTOver1 v5: iPhoneで1画面比較しやすい横並び表示 */
+
+* { box-sizing: border-box; }
+
+:root {
+  --text: #111827;
+  --muted: #6b7280;
+  --line: #e5e7eb;
+  --blue: #2563eb;
+  --blue-dark: #1d4ed8;
+  --soft: #eff6ff;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #f7f9fc;
+  color: var(--text);
+}
+
+header {
+  background: #ffffff;
+  border-bottom: 1px solid var(--line);
+}
+
+.header-inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 8px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 8px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: .08em;
+}
+
+.note {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+a {
+  color: var(--blue);
+  text-decoration: none;
+  font-weight: 900;
+  font-size: 13px;
+}
+
+main {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 6px;
+}
+
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(255,255,255,.97);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 6px;
+  margin-bottom: 6px;
+  box-shadow: 0 6px 18px rgba(15,23,42,.08);
+}
+
+.mode-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  margin-bottom: 5px;
+}
+
+button,
+select {
+  width: 100%;
+  border-radius: 8px;
+  font-size: 11px;
+}
+
+button {
+  padding: 7px 4px;
+  border: 0;
+  color: white;
+  background: linear-gradient(90deg, var(--blue), var(--blue-dark));
+  font-weight: 900;
+}
+
+button.secondary {
+  color: var(--blue-dark);
+  background: #eef2ff;
+  border: 1px solid #bfdbfe;
+}
+
+button.active {
+  background: #111827;
+  outline: 2px solid #93c5fd;
+}
+
+.select-row {
+  display: grid;
+  grid-template-columns: 22px repeat(4, minmax(0, 1fr)) 38px;
+  gap: 3px;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.range-badge {
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--blue);
+  color: white;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+select {
+  height: 30px;
+  padding: 4px 1px;
+  color: #111827;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+}
+
+.status {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.diff {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+  color: #374151;
+  font-size: 10px;
+  margin-top: 2px;
+}
+
+.diff span {
+  background: #f3f4f6;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 2px 6px;
+}
+
+.results {
+  display: grid;
+  gap: 5px;
+  align-items: start;
+}
+
+.results.compare {
+  grid-template-columns: 1fr 1fr;
+}
+
+.results.single {
+  grid-template-columns: 1fr;
+}
+
+.card {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(15,23,42,.10);
+}
+
+.card-title {
+  padding: 4px;
+  border-bottom: 1px solid var(--line);
+  line-height: 1.15;
+  min-height: 30px;
+}
+
+.card-title span {
+  display: inline-block;
+  min-width: 20px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--blue);
+  color: white;
+  font-size: 10px;
+  font-weight: 900;
+  text-align: center;
+  margin-right: 3px;
+}
+
+.card-title strong {
+  font-size: 10px;
+}
+
+.range-img {
+  width: 100%;
+  display: block;
+  background: #f3f4f6;
+  cursor: zoom-in;
+}
+
+.empty {
+  min-height: 260px;
+}
+
+.empty-body {
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+  padding: 10px;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.92);
+  z-index: 999;
+  padding: 10px;
+}
+
+.modal.open {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal img {
+  max-width: 100%;
+  max-height: 90vh;
+  border-radius: 10px;
+  background: white;
+}
+
+.modal-close {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  width: auto;
+  padding: 9px 13px;
+  color: #111827;
+  background: white;
+  border-radius: 999px;
+}
+
+@media (min-width: 700px) {
+  .header-inner { padding: 10px 14px; }
+  h1 { font-size: 24px; }
+  .note { font-size: 13px; }
+  a { font-size: 15px; }
+  main { padding: 10px; }
+
+  .toolbar {
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+
+  .mode-row {
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  button,
+  select {
+    font-size: 14px;
+    border-radius: 11px;
+  }
+
+  button {
+    padding: 10px 8px;
+  }
+
+  .select-row {
+    grid-template-columns: 32px repeat(4, minmax(0, 1fr)) 60px;
+    gap: 7px;
+  }
+
+  .range-badge,
+  select {
+    height: 40px;
+  }
+
+  .status {
+    font-size: 12px;
+  }
+
+  .diff {
+    font-size: 12px;
+    gap: 6px;
+  }
+
+  .card-title {
+    padding: 8px;
+  }
+
+  .card-title strong {
+    font-size: 15px;
+  }
+
+  .card-title span {
+    font-size: 12px;
+    min-width: 28px;
+  }
+}
